@@ -6,8 +6,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.Date;
@@ -18,7 +21,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 @RequiredArgsConstructor
 @Component
 public class UserAuthenticationProvider {
-    @Value("${security.jwt.token.secret-key:secret-key}")
+    @Value("${security.jwt.token.secret-key}")
     private String secretKey;
 
     private final UserService userService;
@@ -47,7 +50,8 @@ public class UserAuthenticationProvider {
         DecodedJWT decoded = verifier.verify(token);
 
         UtlisateurDto user = userService.findByLogin(decoded.getSubject());
-
-        return new UsernamePasswordAuthenticationToken(user, null, Collections.emptyList());
+        ArrayList<SimpleGrantedAuthority> auths = new ArrayList<>(1);
+        auths.add(new SimpleGrantedAuthority(user.getRole()));
+        return new UsernamePasswordAuthenticationToken(user, null, auths);
     }
 }
